@@ -42,4 +42,6 @@ export interface LeaderboardEntry {
 export interface StorageData {
   users: Record<string, UserReward>;
   reactionHistory: ReactionEvent[];
+  /** Tracks which user has already earned points for reacting to a message */
+  claimedReactions: Record<string, boolean>; // key: `${giverId}:${channelId}:${messageTs}`
 }

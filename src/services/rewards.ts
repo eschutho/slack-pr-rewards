@@ -75,8 +75,16 @@ export class RewardService {
       return { giverPoints: 0, receiverPoints: 0, tracked: true };
     }
 
+    // Check if user already earned points for this message (1 point per message max)
+    if (store.hasClaimedReaction(giverId, channelId, messageTs)) {
+      return { giverPoints: 0, receiverPoints: 0, tracked: true };
+    }
+
     const giverPoints = this.calculateGivingPoints(emoji);
     const receiverPoints = this.calculateReceivingPoints(emoji);
+
+    // Mark as claimed before awarding points
+    store.claimReaction(giverId, channelId, messageTs);
 
     // Update stores
     store.addPointsForGiving(giverId, giverUsername, giverPoints);

@@ -6,21 +6,23 @@ A Slack app that rewards users for engaging with PR reviews through emoji reacti
 
 - 🎯 **Point System**: Earn points for giving and receiving emoji reactions
 - 🏆 **Leaderboard**: Track top contributors with `/rewards` command
-- ⭐ **Bonus Emojis**: Get 2x points for review-related emojis (✅, 🚀, 👀, etc.)
 - 📊 **Personal Stats**: Check your stats with `/rewards me`
+- 🔒 **One Point Per Message**: Multiple emojis on the same message don't stack
 
 ## How It Works
 
 | Action | Points |
 |--------|--------|
-| Giving a tracked reaction | 1 pt |
-| Receiving a tracked reaction | 2 pts |
+| Giving a tracked reaction | 1 pt (per message) |
+| Receiving a tracked reaction | 2 pts (per message) |
 
 **Tracked Emojis** (only these earn points):
 - ✅ `:white_check_mark:` - Approval/checkbox
 - 💬 `:speech_balloon:` - Comment bubble
 - ❗ `:exclamation:` - Exclamation mark
 - ❓ `:question:` - Question mark
+
+> **Note:** You can only earn points once per message, regardless of how many tracked emojis you add.
 
 ## Setup
 

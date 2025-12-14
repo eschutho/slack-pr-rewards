@@ -24,7 +24,7 @@ export class RewardStore {
     } catch (error) {
       console.error("Error loading data file, starting fresh:", error);
     }
-    return { users: {}, reactionHistory: [] };
+    return { users: {}, reactionHistory: [], claimedReactions: {} };
   }
 
   private save(): void {
@@ -95,6 +95,23 @@ export class RewardStore {
     return this.getAllUsers()
       .sort((a, b) => b.totalPoints - a.totalPoints)
       .slice(0, limit);
+  }
+
+  /**
+   * Check if a user has already claimed points for reacting to a message
+   */
+  hasClaimedReaction(giverId: string, channelId: string, messageTs: string): boolean {
+    const key = `${giverId}:${channelId}:${messageTs}`;
+    return !!this.data.claimedReactions[key];
+  }
+
+  /**
+   * Mark that a user has claimed points for reacting to a message
+   */
+  claimReaction(giverId: string, channelId: string, messageTs: string): void {
+    const key = `${giverId}:${channelId}:${messageTs}`;
+    this.data.claimedReactions[key] = true;
+    this.save();
   }
 }
 
