@@ -8,6 +8,7 @@ A Slack app that rewards users for engaging with PR reviews through emoji reacti
 - 🏆 **Leaderboard**: Track top contributors with `/rewards` command
 - 📊 **Personal Stats**: Check your stats with `/rewards me`
 - 🔒 **One Point Per Message**: Multiple emojis on the same message don't stack
+- ⭐ **Star Bonus**: Message authors can add stars to increase point value
 
 ## How It Works
 
@@ -15,12 +16,25 @@ A Slack app that rewards users for engaging with PR reviews through emoji reacti
 |--------|--------|
 | Giving a tracked reaction | 1 pt (per message) |
 | Receiving a tracked reaction | 2 pts (per message) |
+| Star bonus (per ⭐ in message) | +1 pt each (max 5) |
 
 **Tracked Emojis** (only these earn points):
 - ✅ `:white_check_mark:` - Approval/checkbox
 - 💬 `:speech_balloon:` - Comment bubble
 - ❗ `:exclamation:` - Exclamation mark
 - ❓ `:question:` - Question mark
+
+### Star Bonus System
+
+Message authors can add `:star:` emojis to their message to indicate difficulty or importance. Each star adds +1 bonus point (up to 5 stars max).
+
+**Example:**
+```
+:star::star::star: This PR fixes a critical bug in the payment system
+```
+When someone reacts with ✅:
+- Reactor gets: 1 + 3 = **4 points**
+- Author gets: 2 + 3 = **5 points**
 
 > **Note:** You can only earn points once per message, regardless of how many tracked emojis you add.
 

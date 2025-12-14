@@ -53,8 +53,21 @@ export class RewardService {
   }
 
   /**
+   * Count star emojis in a message for bonus points (max 5)
+   * Looks for :star: emoji syntax in message text
+   */
+  countStarsInMessage(messageText: string): number {
+    // Match :star: emoji in Slack message format
+    const starMatches = messageText.match(/:star:/g);
+    const count = starMatches ? starMatches.length : 0;
+    // Cap at 5 stars max
+    return Math.min(count, 5);
+  }
+
+  /**
    * Process a reaction_added event
    * Awards points to both the giver and receiver (only for tracked emojis)
+   * Star bonus: if message contains :star: emojis, add bonus points (1-5)
    */
   processReactionAdded(
     giverId: string,
@@ -63,7 +76,8 @@ export class RewardService {
     receiverUsername: string,
     emoji: string,
     channelId: string,
-    messageTs: string
+    messageTs: string,
+    starBonus: number = 0
   ): { giverPoints: number; receiverPoints: number; tracked: boolean } {
     // Ignore non-tracked emojis
     if (!this.isTrackedEmoji(emoji)) {
@@ -80,8 +94,9 @@ export class RewardService {
       return { giverPoints: 0, receiverPoints: 0, tracked: true };
     }
 
-    const giverPoints = this.calculateGivingPoints(emoji);
-    const receiverPoints = this.calculateReceivingPoints(emoji);
+    // Calculate points with star bonus
+    const giverPoints = this.calculateGivingPoints(emoji) + starBonus;
+    const receiverPoints = this.calculateReceivingPoints(emoji) + starBonus;
 
     // Mark as claimed before awarding points
     store.claimReaction(giverId, channelId, messageTs);

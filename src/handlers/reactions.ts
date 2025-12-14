@@ -34,6 +34,10 @@ export function registerReactionHandlers(app: App): void {
 
       const receiverId = message.user;
 
+      // Count star emojis in the message for bonus points (max 5)
+      const messageText = message.text || "";
+      const starCount = rewardService.countStarsInMessage(messageText);
+
       // Get user info for both giver and receiver
       const [giverInfo, receiverInfo] = await Promise.all([
         client.users.info({ user: giverId }),
@@ -51,7 +55,8 @@ export function registerReactionHandlers(app: App): void {
         receiverUsername,
         emoji,
         channel,
-        messageTs
+        messageTs,
+        starCount
       );
 
       // Only log if this was a tracked emoji
