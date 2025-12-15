@@ -12,11 +12,10 @@ A Slack app that rewards users for engaging with PR reviews through emoji reacti
 
 ## How It Works
 
-| Action | Points |
-|--------|--------|
-| Giving a tracked reaction | 1 pt (per message) |
-| Receiving a tracked reaction | 2 pts (per message) |
-| Star bonus (per ⭐ in message) | +1 pt each (max 5) |
+| Role | Points |
+|------|--------|
+| Reactor | 1 pt (per message) |
+| Author | 2 pts (per message) |
 
 **Tracked Emojis** (only these earn points):
 - ✅ `:white_check_mark:` - Approval/checkbox
@@ -24,17 +23,25 @@ A Slack app that rewards users for engaging with PR reviews through emoji reacti
 - ❗ `:exclamation:` - Exclamation mark
 - ❓ `:question:` - Question mark
 
-### Star Bonus System
+### Star Bonus System (Reactor Only)
 
-Message authors can add `:star:` emojis to their message to indicate difficulty or importance. Each star adds +1 bonus point (up to 5 stars max).
+Message authors can add `:star:` emojis to indicate difficulty. Stars increase the **reactor's** points:
+
+| Stars | Reactor Points |
+|-------|---------------|
+| 0-1 | 1 pt |
+| 2 | 2 pts |
+| 3 | 3 pts |
+| 4 | 4 pts |
+| 5 | 5 pts |
 
 **Example:**
 ```
 :star::star::star: This PR fixes a critical bug in the payment system
 ```
 When someone reacts with ✅:
-- Reactor gets: 1 + 3 = **4 points**
-- Author gets: 2 + 3 = **5 points**
+- Reactor gets: **3 points**
+- Author gets: **2 points** (no star bonus)
 
 > **Note:** You can only earn points once per message, regardless of how many tracked emojis you add.
 

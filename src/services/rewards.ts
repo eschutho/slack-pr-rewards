@@ -65,9 +65,18 @@ export class RewardService {
   }
 
   /**
+   * Calculate reactor points based on star count
+   * 0 or 1 star = 1 point, 2+ stars = star count points
+   */
+  calculateReactorPoints(starCount: number): number {
+    return starCount >= 2 ? starCount : 1;
+  }
+
+  /**
    * Process a reaction_added event
    * Awards points to both the giver and receiver (only for tracked emojis)
-   * Star bonus: if message contains :star: emojis, add bonus points (1-5)
+   * Star bonus: reactor gets points based on stars (1 for 0-1 stars, 2-5 for 2-5 stars)
+   * Author always gets base 2 points (no star bonus)
    */
   processReactionAdded(
     giverId: string,
@@ -77,7 +86,7 @@ export class RewardService {
     emoji: string,
     channelId: string,
     messageTs: string,
-    starBonus: number = 0
+    starCount: number = 0
   ): { giverPoints: number; receiverPoints: number; tracked: boolean } {
     // Ignore non-tracked emojis
     if (!this.isTrackedEmoji(emoji)) {
@@ -94,9 +103,9 @@ export class RewardService {
       return { giverPoints: 0, receiverPoints: 0, tracked: true };
     }
 
-    // Calculate points with star bonus
-    const giverPoints = this.calculateGivingPoints(emoji) + starBonus;
-    const receiverPoints = this.calculateReceivingPoints(emoji) + starBonus;
+    // Calculate points: reactor gets star-based points, author gets base points only
+    const giverPoints = this.calculateReactorPoints(starCount);
+    const receiverPoints = this.config.pointsForReceiving; // Always base 2 pts
 
     // Mark as claimed before awarding points
     store.claimReaction(giverId, channelId, messageTs);
