@@ -16,10 +16,17 @@ export interface ReactionEvent {
   username: string;
   emoji: string;
   messageUserId: string;
+  messageUserName?: string;
   messageTs: string;
   channelId: string;
   timestamp: string;
+  /** Points awarded to the reactor (giver) */
+  giverPoints: number;
+  /** Points awarded to the message author (receiver) */
+  receiverPoints: number;
 }
+
+export type LeaderboardPeriod = "30days" | "mtd" | "6months" | "year" | "all";
 
 export interface RewardConfig {
   /** Points earned for giving a tracked reaction */

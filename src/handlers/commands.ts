@@ -1,5 +1,6 @@
 import { App } from "@slack/bolt";
 import { rewardService } from "../services/rewards";
+import { LeaderboardPeriod } from "../types";
 
 /**
  * Register slash command handlers with the Slack app
@@ -47,9 +48,17 @@ export function registerCommandHandlers(app: App): void {
           `*Tracked Emojis:* ${trackedEmojis}`,
           "",
           "*Commands:*",
-          "• `/rewards` - Show the leaderboard",
+          "• `/rewards` - Show the all-time leaderboard",
           "• `/rewards me` - Show your personal stats",
           "• `/rewards help` - Show this help message",
+          "• `/leaderboard [period]` - Time-based leaderboard",
+          "",
+          "*Leaderboard Periods:*",
+          "• `30days` - Last 30 days (default)",
+          "• `mtd` - Month to date",
+          "• `6months` - Last 6 months",
+          "• `year` - Year to date",
+          "• `all` - All time",
         ].join("\n"),
       });
     } else {
@@ -61,5 +70,45 @@ export function registerCommandHandlers(app: App): void {
         text: message,
       });
     }
+  });
+
+  // /leaderboard - Show time-based leaderboard
+  app.command("/leaderboard", async ({ command, ack, respond }) => {
+    await ack();
+
+    const args = command.text.trim().toLowerCase();
+
+    // Parse period from args
+    const validPeriods: LeaderboardPeriod[] = ["30days", "mtd", "6months", "year", "all"];
+    let period: LeaderboardPeriod = "30days"; // default
+
+    if (args === "help") {
+      await respond({
+        response_type: "ephemeral",
+        text: [
+          "*📊 Leaderboard Command Help*",
+          "",
+          "Show the leaderboard for different time periods:",
+          "",
+          "• `/leaderboard` - Last 30 days (default)",
+          "• `/leaderboard 30days` - Last 30 days",
+          "• `/leaderboard mtd` - Month to date",
+          "• `/leaderboard 6months` - Last 6 months",
+          "• `/leaderboard year` - Year to date",
+          "• `/leaderboard all` - All time",
+        ].join("\n"),
+      });
+      return;
+    }
+
+    if (validPeriods.includes(args as LeaderboardPeriod)) {
+      period = args as LeaderboardPeriod;
+    }
+
+    const message = rewardService.formatLeaderboardByPeriod(period);
+    await respond({
+      response_type: "in_channel",
+      text: message,
+    });
   });
 }

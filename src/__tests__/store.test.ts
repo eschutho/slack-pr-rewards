@@ -172,20 +172,131 @@ describe("RewardStore", () => {
   });
 
   describe("recordReaction", () => {
-    it("should record reaction event", () => {
+    it("should record reaction event with points", () => {
       const event = {
         userId: "user1",
         username: "testuser",
         emoji: "white_check_mark",
         messageUserId: "user2",
+        messageUserName: "author",
         messageTs: "123.456",
         channelId: "channel1",
         timestamp: new Date().toISOString(),
+        giverPoints: 1,
+        receiverPoints: 2,
       };
 
       store.recordReaction(event);
 
       expect(mockedFs.writeFileSync).toHaveBeenCalled();
+    });
+  });
+
+  describe("getLeaderboardByPeriod", () => {
+    it("should return empty array when no reactions", () => {
+      const leaderboard = store.getLeaderboardByPeriod("30days");
+      expect(leaderboard).toEqual([]);
+    });
+
+    it("should aggregate points from reactions within period", () => {
+      // Record some reactions
+      const now = new Date().toISOString();
+      store.recordReaction({
+        userId: "user1",
+        username: "reactor1",
+        emoji: "white_check_mark",
+        messageUserId: "user2",
+        messageUserName: "author1",
+        messageTs: "123.456",
+        channelId: "channel1",
+        timestamp: now,
+        giverPoints: 3,
+        receiverPoints: 2,
+      });
+
+      store.recordReaction({
+        userId: "user1",
+        username: "reactor1",
+        emoji: "exclamation",
+        messageUserId: "user3",
+        messageUserName: "author2",
+        messageTs: "789.012",
+        channelId: "channel1",
+        timestamp: now,
+        giverPoints: 1,
+        receiverPoints: 2,
+      });
+
+      const leaderboard = store.getLeaderboardByPeriod("30days");
+
+      // user1 gave 3+1=4 points, user2 received 2, user3 received 2
+      expect(leaderboard).toHaveLength(3);
+      expect(leaderboard[0].userId).toBe("user1");
+      expect(leaderboard[0].points).toBe(4);
+    });
+
+    it("should filter reactions by period", () => {
+      // Record an old reaction (more than 30 days ago)
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 45);
+
+      store.recordReaction({
+        userId: "user1",
+        username: "old_reactor",
+        emoji: "white_check_mark",
+        messageUserId: "user2",
+        messageUserName: "author",
+        messageTs: "old.123",
+        channelId: "channel1",
+        timestamp: oldDate.toISOString(),
+        giverPoints: 10,
+        receiverPoints: 5,
+      });
+
+      // Record a recent reaction
+      store.recordReaction({
+        userId: "user3",
+        username: "new_reactor",
+        emoji: "white_check_mark",
+        messageUserId: "user4",
+        messageUserName: "new_author",
+        messageTs: "new.456",
+        channelId: "channel1",
+        timestamp: new Date().toISOString(),
+        giverPoints: 1,
+        receiverPoints: 2,
+      });
+
+      const leaderboard = store.getLeaderboardByPeriod("30days");
+
+      // Only recent reaction should be counted
+      const user1Entry = leaderboard.find((e) => e.userId === "user1");
+      const user3Entry = leaderboard.find((e) => e.userId === "user3");
+
+      expect(user1Entry).toBeUndefined(); // Old reaction filtered out
+      expect(user3Entry?.points).toBe(1);
+    });
+
+    it("should return all reactions for 'all' period", () => {
+      const oldDate = new Date();
+      oldDate.setFullYear(oldDate.getFullYear() - 2);
+
+      store.recordReaction({
+        userId: "user1",
+        username: "old_reactor",
+        emoji: "white_check_mark",
+        messageUserId: "user2",
+        messageUserName: "author",
+        messageTs: "old.123",
+        channelId: "channel1",
+        timestamp: oldDate.toISOString(),
+        giverPoints: 5,
+        receiverPoints: 2,
+      });
+
+      const leaderboard = store.getLeaderboardByPeriod("all");
+
+      expect(leaderboard.find((e) => e.userId === "user1")?.points).toBe(5);
     });
   });
 });

@@ -119,10 +119,14 @@ npm start
 
 | Command | Description |
 |---------|-------------|
-| `/rewards` | Show the leaderboard |
+| `/rewards` | Show the all-time leaderboard |
 | `/rewards me` | Show your personal stats |
 | `/rewards help` | Show help message |
-| `/rewards 5` | Show top 5 on leaderboard |
+| `/leaderboard` | Show leaderboard for last 30 days |
+| `/leaderboard mtd` | Month to date leaderboard |
+| `/leaderboard 6months` | Last 6 months leaderboard |
+| `/leaderboard year` | Year to date leaderboard |
+| `/leaderboard all` | All time leaderboard |
 
 ## Project Structure
 

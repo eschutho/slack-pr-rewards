@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { StorageData, UserReward, ReactionEvent } from "../types";
+import { StorageData, UserReward, ReactionEvent, LeaderboardPeriod } from "../types";
 
 const DATA_FILE = path.join(process.cwd(), "data", "rewards.json");
 
@@ -84,9 +84,9 @@ export class RewardStore {
 
   recordReaction(event: ReactionEvent): void {
     this.data.reactionHistory.push(event);
-    // Keep only last 1000 reactions to prevent file bloat
-    if (this.data.reactionHistory.length > 1000) {
-      this.data.reactionHistory = this.data.reactionHistory.slice(-1000);
+    // Keep only last 10000 reactions for time-based leaderboards
+    if (this.data.reactionHistory.length > 10000) {
+      this.data.reactionHistory = this.data.reactionHistory.slice(-10000);
     }
     this.save();
   }
@@ -94,6 +94,90 @@ export class RewardStore {
   getLeaderboard(limit: number = 10): UserReward[] {
     return this.getAllUsers()
       .sort((a, b) => b.totalPoints - a.totalPoints)
+      .slice(0, limit);
+  }
+
+  /**
+   * Get the start date for a given period
+   */
+  private getStartDateForPeriod(period: LeaderboardPeriod): Date | null {
+    const now = new Date();
+
+    switch (period) {
+      case "30days":
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case "mtd":
+        return new Date(now.getFullYear(), now.getMonth(), 1);
+      case "6months":
+        return new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+      case "year":
+        return new Date(now.getFullYear(), 0, 1);
+      case "all":
+        return null;
+      default:
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+  }
+
+  /**
+   * Get leaderboard for a specific time period
+   * Calculates points from reaction history within the date range
+   */
+  getLeaderboardByPeriod(
+    period: LeaderboardPeriod,
+    limit: number = 10
+  ): { userId: string; username: string; points: number; reactions: number }[] {
+    const startDate = this.getStartDateForPeriod(period);
+
+    // Filter reactions by date
+    const filteredReactions = startDate
+      ? this.data.reactionHistory.filter(
+          (r) => new Date(r.timestamp) >= startDate
+        )
+      : this.data.reactionHistory;
+
+    // Aggregate points per user (both giver and receiver points)
+    const userPoints: Record<
+      string,
+      { username: string; points: number; reactions: number }
+    > = {};
+
+    for (const reaction of filteredReactions) {
+      // Add giver points
+      if (reaction.giverPoints > 0) {
+        if (!userPoints[reaction.userId]) {
+          userPoints[reaction.userId] = {
+            username: reaction.username,
+            points: 0,
+            reactions: 0,
+          };
+        }
+        userPoints[reaction.userId].points += reaction.giverPoints;
+        userPoints[reaction.userId].reactions += 1;
+      }
+
+      // Add receiver points
+      if (reaction.receiverPoints > 0) {
+        if (!userPoints[reaction.messageUserId]) {
+          userPoints[reaction.messageUserId] = {
+            username: reaction.messageUserName || reaction.messageUserId,
+            points: 0,
+            reactions: 0,
+          };
+        }
+        userPoints[reaction.messageUserId].points += reaction.receiverPoints;
+      }
+    }
+
+    // Sort and limit
+    return Object.entries(userPoints)
+      .map(([userId, data]) => ({
+        userId,
+        username: data.username,
+        points: data.points,
+        reactions: data.reactions,
+      }))
+      .sort((a, b) => b.points - a.points)
       .slice(0, limit);
   }
 

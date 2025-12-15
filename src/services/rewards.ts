@@ -1,5 +1,10 @@
 import { store } from "../storage/store";
-import { RewardConfig, LeaderboardEntry, ReactionEvent } from "../types";
+import {
+  RewardConfig,
+  LeaderboardEntry,
+  ReactionEvent,
+  LeaderboardPeriod,
+} from "../types";
 
 /**
  * Default reward configuration
@@ -114,15 +119,18 @@ export class RewardService {
     store.addPointsForGiving(giverId, giverUsername, giverPoints);
     store.addPointsForReceiving(receiverId, receiverUsername, receiverPoints);
 
-    // Record the event
+    // Record the event with points for time-based leaderboards
     const event: ReactionEvent = {
       userId: giverId,
       username: giverUsername,
       emoji,
       messageUserId: receiverId,
+      messageUserName: receiverUsername,
       messageTs,
       channelId,
       timestamp: new Date().toISOString(),
+      giverPoints,
+      receiverPoints,
     };
     store.recordReaction(event);
 
@@ -188,6 +196,46 @@ export class RewardService {
       `• *Reactions Received:* ${stats.reactionsReceived}`,
       `• *Last Activity:* ${new Date(stats.lastActivity).toLocaleDateString()}`,
     ].join("\n");
+  }
+
+  /**
+   * Get period display name
+   */
+  private getPeriodDisplayName(period: LeaderboardPeriod): string {
+    switch (period) {
+      case "30days":
+        return "Last 30 Days";
+      case "mtd":
+        return "Month to Date";
+      case "6months":
+        return "Last 6 Months";
+      case "year":
+        return "Year to Date";
+      case "all":
+        return "All Time";
+      default:
+        return "Last 30 Days";
+    }
+  }
+
+  /**
+   * Format time-based leaderboard for Slack display
+   */
+  formatLeaderboardByPeriod(period: LeaderboardPeriod, limit: number = 10): string {
+    const leaderboard = store.getLeaderboardByPeriod(period, limit);
+    const periodName = this.getPeriodDisplayName(period);
+
+    if (leaderboard.length === 0) {
+      return `No rewards earned in ${periodName.toLowerCase()}! Start reacting to messages to earn points. 🎯`;
+    }
+
+    const medals = ["🥇", "🥈", "🥉"];
+    const lines = leaderboard.map((entry, index) => {
+      const medal = medals[index] || `${index + 1}.`;
+      return `${medal} <@${entry.userId}> - *${entry.points} pts*`;
+    });
+
+    return `*🏆 Leaderboard: ${periodName}*\n\n${lines.join("\n")}`;
   }
 }
 
