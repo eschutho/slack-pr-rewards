@@ -1,13 +1,13 @@
 import * as fs from "fs";
-import { RewardStore } from "../storage/store";
+import { PointsStore } from "../storage/store";
 
 // Mock the fs module
 jest.mock("fs");
 
 const mockedFs = fs as jest.Mocked<typeof fs>;
 
-describe("RewardStore", () => {
-  let store: RewardStore;
+describe("PointsStore", () => {
+  let store: PointsStore;
 
   beforeEach(() => {
     // Reset mocks
@@ -18,7 +18,7 @@ describe("RewardStore", () => {
     mockedFs.writeFileSync.mockImplementation(() => {});
     mockedFs.mkdirSync.mockImplementation(() => undefined);
 
-    store = new RewardStore();
+    store = new PointsStore();
   });
 
   describe("initialization", () => {
@@ -46,7 +46,7 @@ describe("RewardStore", () => {
       mockedFs.existsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue(JSON.stringify(existingData));
 
-      const storeWithData = new RewardStore();
+      const storeWithData = new PointsStore();
       const users = storeWithData.getAllUsers();
 
       expect(users).toHaveLength(1);

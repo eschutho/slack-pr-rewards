@@ -1,5 +1,5 @@
 import { App } from "@slack/bolt";
-import { rewardService } from "../services/rewards";
+import { pointsService } from "../services/points";
 import { LeaderboardPeriod } from "../types";
 
 /**
@@ -14,14 +14,14 @@ export function registerCommandHandlers(app: App): void {
 
     if (args === "me" || args === "stats") {
       // Show personal stats
-      const message = rewardService.formatUserStatsMessage(command.user_id);
+      const message = pointsService.formatUserStatsMessage(command.user_id);
       await respond({
         response_type: "ephemeral",
         text: message,
       });
     } else if (args === "help") {
       // Show help with tracked emojis list
-      const trackedEmojis = rewardService
+      const trackedEmojis = pointsService
         .getTrackedEmojis()
         .map((e) => `:${e}:`)
         .join(" ");
@@ -64,7 +64,7 @@ export function registerCommandHandlers(app: App): void {
     } else {
       // Show leaderboard (default)
       const limit = parseInt(args) || 10;
-      const message = rewardService.formatLeaderboardMessage(Math.min(limit, 25));
+      const message = pointsService.formatLeaderboardMessage(Math.min(limit, 25));
       await respond({
         response_type: "in_channel",
         text: message,
@@ -105,7 +105,7 @@ export function registerCommandHandlers(app: App): void {
       period = args as LeaderboardPeriod;
     }
 
-    const message = rewardService.formatLeaderboardByPeriod(period);
+    const message = pointsService.formatLeaderboardByPeriod(period);
     await respond({
       response_type: "in_channel",
       text: message,

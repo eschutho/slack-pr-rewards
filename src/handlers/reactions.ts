@@ -1,5 +1,5 @@
 import { App, ReactionAddedEvent } from "@slack/bolt";
-import { rewardService } from "../services/rewards";
+import { pointsService } from "../services/points";
 
 /**
  * Register reaction event handlers with the Slack app
@@ -36,7 +36,7 @@ export function registerReactionHandlers(app: App): void {
 
       // Count star emojis in the message for bonus points (max 5)
       const messageText = message.text || "";
-      const starCount = rewardService.countStarsInMessage(messageText);
+      const starCount = pointsService.countStarsInMessage(messageText);
 
       // Get user info for both giver and receiver
       const [giverInfo, receiverInfo] = await Promise.all([
@@ -47,8 +47,8 @@ export function registerReactionHandlers(app: App): void {
       const giverUsername = giverInfo.user?.name || giverId;
       const receiverUsername = receiverInfo.user?.name || receiverId;
 
-      // Process the reward (only for tracked emojis)
-      const { giverPoints, receiverPoints, tracked } = rewardService.processReactionAdded(
+      // Process the points (only for tracked emojis)
+      const { giverPoints, receiverPoints, tracked } = pointsService.processReactionAdded(
         giverId,
         giverUsername,
         receiverId,

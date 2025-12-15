@@ -1,19 +1,19 @@
 import { store } from "../storage/store";
 import {
-  RewardConfig,
+  PointsConfig,
   LeaderboardEntry,
   ReactionEvent,
   LeaderboardPeriod,
 } from "../types";
 
 /**
- * Default reward configuration
+ * Default points configuration
  * Only tracked emojis will earn points - all others are ignored
  */
-const DEFAULT_CONFIG: RewardConfig = {
+const DEFAULT_CONFIG: PointsConfig = {
   pointsForGiving: 1,
   pointsForReceiving: 2,
-  // Only these emojis are tracked for rewards
+  // Only these emojis are tracked for points
   trackedEmojis: [
     "white_check_mark", // ✅ white checkbox
     "speech_balloon", // 💬 comment bubble
@@ -22,10 +22,10 @@ const DEFAULT_CONFIG: RewardConfig = {
   ],
 };
 
-export class RewardService {
-  private config: RewardConfig;
+export class PointsService {
+  private config: PointsConfig;
 
-  constructor(config: Partial<RewardConfig> = {}) {
+  constructor(config: Partial<PointsConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
@@ -240,4 +240,4 @@ export class RewardService {
 }
 
 // Singleton instance
-export const rewardService = new RewardService();
+export const pointsService = new PointsService();

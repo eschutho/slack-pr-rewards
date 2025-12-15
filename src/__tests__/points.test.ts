@@ -1,10 +1,10 @@
-import { RewardService } from "../services/rewards";
+import { PointsService } from "../services/points";
 
-describe("RewardService", () => {
-  let service: RewardService;
+describe("PointsService", () => {
+  let service: PointsService;
 
   beforeEach(() => {
-    service = new RewardService();
+    service = new PointsService();
   });
 
   describe("isTrackedEmoji", () => {

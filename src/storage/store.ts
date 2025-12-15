@@ -1,14 +1,14 @@
 import * as fs from "fs";
 import * as path from "path";
-import { StorageData, UserReward, ReactionEvent, LeaderboardPeriod } from "../types";
+import { StorageData, UserPoints, ReactionEvent, LeaderboardPeriod } from "../types";
 
-const DATA_FILE = path.join(process.cwd(), "data", "rewards.json");
+const DATA_FILE = path.join(process.cwd(), "data", "points.json");
 
 /**
- * Simple JSON file-based storage for reward data
+ * Simple JSON file-based storage for points data
  * Can be swapped for SQLite or other database later
  */
-export class RewardStore {
+export class PointsStore {
   private data: StorageData;
 
   constructor() {
@@ -39,15 +39,15 @@ export class RewardStore {
     }
   }
 
-  getUser(userId: string): UserReward | undefined {
+  getUser(userId: string): UserPoints | undefined {
     return this.data.users[userId];
   }
 
-  getAllUsers(): UserReward[] {
+  getAllUsers(): UserPoints[] {
     return Object.values(this.data.users);
   }
 
-  upsertUser(userId: string, username: string): UserReward {
+  upsertUser(userId: string, username: string): UserPoints {
     if (!this.data.users[userId]) {
       this.data.users[userId] = {
         userId,
@@ -64,7 +64,7 @@ export class RewardStore {
     return this.data.users[userId];
   }
 
-  addPointsForGiving(userId: string, username: string, points: number): UserReward {
+  addPointsForGiving(userId: string, username: string, points: number): UserPoints {
     const user = this.upsertUser(userId, username);
     user.totalPoints += points;
     user.reactionsGiven += 1;
@@ -73,7 +73,7 @@ export class RewardStore {
     return user;
   }
 
-  addPointsForReceiving(userId: string, username: string, points: number): UserReward {
+  addPointsForReceiving(userId: string, username: string, points: number): UserPoints {
     const user = this.upsertUser(userId, username);
     user.totalPoints += points;
     user.reactionsReceived += 1;
@@ -91,7 +91,7 @@ export class RewardStore {
     this.save();
   }
 
-  getLeaderboard(limit: number = 10): UserReward[] {
+  getLeaderboard(limit: number = 10): UserPoints[] {
     return this.getAllUsers()
       .sort((a, b) => b.totalPoints - a.totalPoints)
       .slice(0, limit);
@@ -200,4 +200,4 @@ export class RewardStore {
 }
 
 // Singleton instance
-export const store = new RewardStore();
+export const store = new PointsStore();
