@@ -33,7 +33,7 @@ async function start() {
   const port = parseInt(process.env.PORT || "3000", 10);
 
   await app.start(port);
-  console.log(`⚡️ Slack PR Rewards bot is running!`);
+  console.log(`⚡️ Slack PR Points bot is running!`);
   console.log(`   Mode: Socket Mode`);
   console.log(`   Log Level: ${process.env.LOG_LEVEL || "INFO"}`);
 }

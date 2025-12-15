@@ -166,7 +166,7 @@ export class RewardService {
     const leaderboard = this.getLeaderboard(limit);
 
     if (leaderboard.length === 0) {
-      return "No rewards earned yet! Start reacting to messages to earn points. 🎯";
+      return "No points earned yet! Start reacting to messages to earn points. 🎯";
     }
 
     const medals = ["🥇", "🥈", "🥉"];
@@ -175,7 +175,7 @@ export class RewardService {
       return `${medal} <@${entry.userId}> - *${entry.totalPoints} pts* (${entry.reactionsGiven} given, ${entry.reactionsReceived} received)`;
     });
 
-    return `*🏆 PR Review Rewards Leaderboard*\n\n${lines.join("\n")}`;
+    return `*🏆 Points Leaderboard*\n\n${lines.join("\n")}`;
   }
 
   /**
@@ -185,11 +185,11 @@ export class RewardService {
     const stats = this.getUserStats(userId);
 
     if (!stats) {
-      return "You haven't earned any rewards yet! React to messages to start earning points. 🎯";
+      return "You haven't earned any points yet! React to messages to start earning points. 🎯";
     }
 
     return [
-      `*📊 Your Reward Stats*`,
+      `*📊 Your Stats*`,
       ``,
       `• *Total Points:* ${stats.totalPoints}`,
       `• *Reactions Given:* ${stats.reactionsGiven}`,
@@ -226,7 +226,7 @@ export class RewardService {
     const periodName = this.getPeriodDisplayName(period);
 
     if (leaderboard.length === 0) {
-      return `No rewards earned in ${periodName.toLowerCase()}! Start reacting to messages to earn points. 🎯`;
+      return `No points earned in ${periodName.toLowerCase()}! Start reacting to messages to earn points. 🎯`;
     }
 
     const medals = ["🥇", "🥈", "🥉"];

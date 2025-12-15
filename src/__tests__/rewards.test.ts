@@ -113,14 +113,14 @@ describe("RewardService", () => {
   describe("formatLeaderboardMessage", () => {
     it("should show empty message when no users", () => {
       const message = service.formatLeaderboardMessage();
-      expect(message).toContain("No rewards earned yet");
+      expect(message).toContain("No points earned yet");
     });
   });
 
   describe("formatUserStatsMessage", () => {
     it("should show message for unknown user", () => {
       const message = service.formatUserStatsMessage("unknown-user");
-      expect(message).toContain("haven't earned any rewards yet");
+      expect(message).toContain("haven't earned any points yet");
     });
   });
 });

@@ -29,7 +29,7 @@ export function registerCommandHandlers(app: App): void {
       await respond({
         response_type: "ephemeral",
         text: [
-          "*🎯 PR Rewards Bot Help*",
+          "*🎯 PR Points Bot Help*",
           "",
           "Earn points by reacting to messages with tracked emojis!",
           "",
