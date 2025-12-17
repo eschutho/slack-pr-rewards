@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { StorageData, UserPoints, ReactionEvent, LeaderboardPeriod } from "../types";
+import { StorageData, UserPoints, ReactionEvent, LeaderboardPeriod, TrackedMessage } from "../types";
 
 const DATA_FILE = path.join(process.cwd(), "data", "points.json");
 
@@ -24,7 +24,7 @@ export class PointsStore {
     } catch (error) {
       console.error("Error loading data file, starting fresh:", error);
     }
-    return { users: {}, reactionHistory: [], claimedReactions: {} };
+    return { users: {}, reactionHistory: [], claimedReactions: {}, trackedMessages: {} };
   }
 
   private save(): void {
@@ -196,6 +196,81 @@ export class PointsStore {
     const key = `${giverId}:${channelId}:${messageTs}`;
     this.data.claimedReactions[key] = true;
     this.save();
+  }
+
+  /**
+   * Track a message for PR review timing
+   * Called when a tracked emoji is added to a message
+   */
+  trackMessage(
+    channelId: string,
+    messageTs: string,
+    authorId: string,
+    authorName: string
+  ): TrackedMessage {
+    // Ensure trackedMessages exists (for backwards compatibility)
+    if (!this.data.trackedMessages) {
+      this.data.trackedMessages = {};
+    }
+
+    const key = `${channelId}:${messageTs}`;
+
+    if (!this.data.trackedMessages[key]) {
+      this.data.trackedMessages[key] = {
+        key,
+        channelId,
+        messageTs,
+        authorId,
+        authorName,
+        firstSeenAt: new Date().toISOString(),
+        isReviewed: false,
+      };
+      this.save();
+    }
+
+    return this.data.trackedMessages[key];
+  }
+
+  /**
+   * Mark a message as reviewed (received white_check_mark)
+   */
+  markMessageReviewed(channelId: string, messageTs: string): void {
+    // Ensure trackedMessages exists
+    if (!this.data.trackedMessages) {
+      this.data.trackedMessages = {};
+    }
+
+    const key = `${channelId}:${messageTs}`;
+
+    if (this.data.trackedMessages[key] && !this.data.trackedMessages[key].isReviewed) {
+      this.data.trackedMessages[key].isReviewed = true;
+      this.data.trackedMessages[key].reviewedAt = new Date().toISOString();
+      this.save();
+    }
+  }
+
+  /**
+   * Get all tracked messages
+   */
+  getTrackedMessages(): TrackedMessage[] {
+    if (!this.data.trackedMessages) {
+      return [];
+    }
+    return Object.values(this.data.trackedMessages);
+  }
+
+  /**
+   * Get messages that are still pending review (no white_check_mark yet)
+   */
+  getPendingReviews(): TrackedMessage[] {
+    return this.getTrackedMessages().filter((m) => !m.isReviewed);
+  }
+
+  /**
+   * Get messages that have been reviewed
+   */
+  getReviewedMessages(): TrackedMessage[] {
+    return this.getTrackedMessages().filter((m) => m.isReviewed);
   }
 }
 

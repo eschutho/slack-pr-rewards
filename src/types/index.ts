@@ -46,9 +46,30 @@ export interface LeaderboardEntry {
   reactionsReceived: number;
 }
 
+/**
+ * Tracks a PR message for review timing
+ */
+export interface TrackedMessage {
+  /** Unique key: channelId:messageTs */
+  key: string;
+  channelId: string;
+  messageTs: string;
+  /** User who posted the message */
+  authorId: string;
+  authorName: string;
+  /** When the message was first seen (first reaction) */
+  firstSeenAt: string;
+  /** When the message received a white_check_mark (reviewed) */
+  reviewedAt?: string;
+  /** Whether this message has been reviewed */
+  isReviewed: boolean;
+}
+
 export interface StorageData {
   users: Record<string, UserPoints>;
   reactionHistory: ReactionEvent[];
   /** Tracks which user has already earned points for reacting to a message */
   claimedReactions: Record<string, boolean>; // key: `${giverId}:${channelId}:${messageTs}`
+  /** Tracks PR messages for review timing */
+  trackedMessages: Record<string, TrackedMessage>; // key: `${channelId}:${messageTs}`
 }

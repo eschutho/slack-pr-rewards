@@ -4,6 +4,7 @@ import {
   LeaderboardEntry,
   ReactionEvent,
   LeaderboardPeriod,
+  TrackedMessage,
 } from "../types";
 
 /**
@@ -236,6 +237,146 @@ export class PointsService {
     });
 
     return `*🏆 Leaderboard: ${periodName}*\n\n${lines.join("\n")}`;
+  }
+
+  /**
+   * Track a message for PR review timing
+   */
+  trackMessage(
+    channelId: string,
+    messageTs: string,
+    authorId: string,
+    authorName: string
+  ): void {
+    store.trackMessage(channelId, messageTs, authorId, authorName);
+  }
+
+  /**
+   * Mark a message as reviewed when it receives a white_check_mark
+   */
+  markAsReviewed(channelId: string, messageTs: string): void {
+    store.markMessageReviewed(channelId, messageTs);
+  }
+
+  /**
+   * Check if an emoji is the review completion emoji
+   */
+  isReviewEmoji(emoji: string): boolean {
+    return emoji.toLowerCase() === "white_check_mark";
+  }
+
+  /**
+   * Get pending reviews (messages without white_check_mark)
+   */
+  getPendingReviews(): TrackedMessage[] {
+    return store.getPendingReviews();
+  }
+
+  /**
+   * Get reviewed messages
+   */
+  getReviewedMessages(): TrackedMessage[] {
+    return store.getReviewedMessages();
+  }
+
+  /**
+   * Calculate average review time in milliseconds
+   */
+  calculateAverageReviewTime(): number | null {
+    const reviewed = store.getReviewedMessages();
+
+    if (reviewed.length === 0) {
+      return null;
+    }
+
+    const totalTime = reviewed.reduce((sum, msg) => {
+      const firstSeen = new Date(msg.firstSeenAt).getTime();
+      const reviewedAt = new Date(msg.reviewedAt!).getTime();
+      return sum + (reviewedAt - firstSeen);
+    }, 0);
+
+    return totalTime / reviewed.length;
+  }
+
+  /**
+   * Format duration in human readable format
+   */
+  formatDuration(ms: number): string {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) {
+      const remainingHours = hours % 24;
+      return `${days}d ${remainingHours}h`;
+    } else if (hours > 0) {
+      const remainingMinutes = minutes % 60;
+      return `${hours}h ${remainingMinutes}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m`;
+    } else {
+      return `${seconds}s`;
+    }
+  }
+
+  /**
+   * Format PR status message for Slack display
+   */
+  formatPRStatusMessage(): string {
+    const pending = this.getPendingReviews();
+    const avgTime = this.calculateAverageReviewTime();
+    const reviewed = this.getReviewedMessages();
+
+    const lines: string[] = ["*📋 PR Review Status*", ""];
+
+    // Average review time
+    if (avgTime !== null) {
+      lines.push(`*Average Review Time:* ${this.formatDuration(avgTime)}`);
+      lines.push(`*Total Reviews Completed:* ${reviewed.length}`);
+    } else {
+      lines.push("_No completed reviews yet to calculate average time._");
+    }
+
+    lines.push("");
+
+    // Pending reviews
+    if (pending.length === 0) {
+      lines.push("*Pending Reviews:* None! All caught up! 🎉");
+    } else {
+      lines.push(`*Pending Reviews:* ${pending.length}`);
+      lines.push("");
+
+      // Sort by oldest first (longest waiting)
+      const sortedPending = [...pending].sort(
+        (a, b) => new Date(a.firstSeenAt).getTime() - new Date(b.firstSeenAt).getTime()
+      );
+
+      // Show up to 10 pending items
+      const toShow = sortedPending.slice(0, 10);
+      toShow.forEach((msg, index) => {
+        const waitTime = Date.now() - new Date(msg.firstSeenAt).getTime();
+        const slackLink = this.formatSlackMessageLink(msg.channelId, msg.messageTs);
+        lines.push(
+          `${index + 1}. ${slackLink} by <@${msg.authorId}> - waiting *${this.formatDuration(waitTime)}*`
+        );
+      });
+
+      if (pending.length > 10) {
+        lines.push(`_...and ${pending.length - 10} more_`);
+      }
+    }
+
+    return lines.join("\n");
+  }
+
+  /**
+   * Format a Slack message link
+   */
+  private formatSlackMessageLink(channelId: string, messageTs: string): string {
+    // Convert message timestamp to link format (remove the dot)
+    const tsForLink = messageTs.replace(".", "");
+    return `<https://slack.com/archives/${channelId}/p${tsForLink}|View message>`;
   }
 }
 

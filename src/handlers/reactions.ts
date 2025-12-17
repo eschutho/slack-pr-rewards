@@ -59,10 +59,22 @@ export function registerReactionHandlers(app: App): void {
         starCount
       );
 
+      // Track message for PR review timing (only for tracked emojis)
+      if (tracked) {
+        // Track this message (first reaction starts the timer)
+        pointsService.trackMessage(channel, messageTs, receiverId, receiverUsername);
+
+        // If this is a white_check_mark, mark the message as reviewed
+        if (pointsService.isReviewEmoji(emoji)) {
+          pointsService.markAsReviewed(channel, messageTs);
+          logger.info(`Message reviewed: ${receiverUsername}'s message in ${channel}`);
+        }
+      }
+
       // Only log if this was a tracked emoji
       if (tracked && (giverPoints > 0 || receiverPoints > 0)) {
         logger.info(
-          `Reward processed: ${giverUsername} gave :${emoji}: to ${receiverUsername}. ` +
+          `Points awarded: ${giverUsername} gave :${emoji}: to ${receiverUsername}. ` +
             `Giver +${giverPoints}pts, Receiver +${receiverPoints}pts`
         );
       }

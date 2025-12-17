@@ -16,6 +16,10 @@ features:
       description: View the points leaderboard for a time period
       usage_hint: "[30days | mtd | 6months | year | all]"
       should_escape: false
+    - command: /pr-status
+      description: View PR review times and pending reviews
+      usage_hint: "[help]"
+      should_escape: false
 
 oauth_config:
   scopes:

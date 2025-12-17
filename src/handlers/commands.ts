@@ -111,4 +111,37 @@ export function registerCommandHandlers(app: App): void {
       text: message,
     });
   });
+
+  // /pr-status - Show PR review timing and pending reviews
+  app.command("/pr-status", async ({ command, ack, respond }) => {
+    await ack();
+
+    const args = command.text.trim().toLowerCase();
+
+    if (args === "help") {
+      await respond({
+        response_type: "ephemeral",
+        text: [
+          "*📋 PR Status Command Help*",
+          "",
+          "Track PR review times and see which PRs need attention.",
+          "",
+          "• `/pr-status` - Show average review time and pending reviews",
+          "• `/pr-status help` - Show this help message",
+          "",
+          "*How it works:*",
+          "• Messages are tracked when they receive a tracked emoji reaction",
+          "• A message is considered \"reviewed\" when it gets a :white_check_mark:",
+          "• Average time is calculated from first reaction to :white_check_mark:",
+        ].join("\n"),
+      });
+      return;
+    }
+
+    const message = pointsService.formatPRStatusMessage();
+    await respond({
+      response_type: "in_channel",
+      text: message,
+    });
+  });
 }
