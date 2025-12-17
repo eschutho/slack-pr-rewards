@@ -1,0 +1,147 @@
+import { App } from "@slack/bolt";
+import { pointsService } from "../services/points";
+import { LeaderboardPeriod } from "../types";
+
+/**
+ * Register slash command handlers with the Slack app
+ */
+export function registerCommandHandlers(app: App): void {
+  // /rewards - Show leaderboard or personal stats
+  app.command("/rewards", async ({ command, ack, respond }) => {
+    await ack();
+
+    const args = command.text.trim().toLowerCase();
+
+    if (args === "me" || args === "stats") {
+      // Show personal stats
+      const message = pointsService.formatUserStatsMessage(command.user_id);
+      await respond({
+        response_type: "ephemeral",
+        text: message,
+      });
+    } else if (args === "help") {
+      // Show help with tracked emojis list
+      const trackedEmojis = pointsService
+        .getTrackedEmojis()
+        .map((e) => `:${e}:`)
+        .join(" ");
+
+      await respond({
+        response_type: "ephemeral",
+        text: [
+          "*🎯 PR Points Bot Help*",
+          "",
+          "Earn points by reacting to messages with tracked emojis!",
+          "",
+          "*Points:*",
+          "• *Reactor:* 1 point (per message)",
+          "• *Author:* 2 points (per message)",
+          "",
+          "*⭐ Star Bonus (reactor only):*",
+          "Authors can add :star: to difficult PRs to reward reviewers more!",
+          "• 0-1 stars: 1 point",
+          "• 2 stars: 2 points",
+          "• 3 stars: 3 points",
+          "• 4 stars: 4 points",
+          "• 5 stars: 5 points",
+          "",
+          `*Tracked Emojis:* ${trackedEmojis}`,
+          "",
+          "*Commands:*",
+          "• `/rewards` - Show the all-time leaderboard",
+          "• `/rewards me` - Show your personal stats",
+          "• `/rewards help` - Show this help message",
+          "• `/leaderboard [period]` - Time-based leaderboard",
+          "",
+          "*Leaderboard Periods:*",
+          "• `30days` - Last 30 days (default)",
+          "• `mtd` - Month to date",
+          "• `6months` - Last 6 months",
+          "• `year` - Year to date",
+          "• `all` - All time",
+        ].join("\n"),
+      });
+    } else {
+      // Show leaderboard (default)
+      const limit = parseInt(args) || 10;
+      const message = pointsService.formatLeaderboardMessage(Math.min(limit, 25));
+      await respond({
+        response_type: "in_channel",
+        text: message,
+      });
+    }
+  });
+
+  // /leaderboard - Show time-based leaderboard
+  app.command("/leaderboard", async ({ command, ack, respond }) => {
+    await ack();
+
+    const args = command.text.trim().toLowerCase();
+
+    // Parse period from args
+    const validPeriods: LeaderboardPeriod[] = ["30days", "mtd", "6months", "year", "all"];
+    let period: LeaderboardPeriod = "30days"; // default
+
+    if (args === "help") {
+      await respond({
+        response_type: "ephemeral",
+        text: [
+          "*📊 Leaderboard Command Help*",
+          "",
+          "Show the leaderboard for different time periods:",
+          "",
+          "• `/leaderboard` - Last 30 days (default)",
+          "• `/leaderboard 30days` - Last 30 days",
+          "• `/leaderboard mtd` - Month to date",
+          "• `/leaderboard 6months` - Last 6 months",
+          "• `/leaderboard year` - Year to date",
+          "• `/leaderboard all` - All time",
+        ].join("\n"),
+      });
+      return;
+    }
+
+    if (validPeriods.includes(args as LeaderboardPeriod)) {
+      period = args as LeaderboardPeriod;
+    }
+
+    const message = pointsService.formatLeaderboardByPeriod(period);
+    await respond({
+      response_type: "in_channel",
+      text: message,
+    });
+  });
+
+  // /pr-status - Show PR review timing and pending reviews
+  app.command("/pr-status", async ({ command, ack, respond }) => {
+    await ack();
+
+    const args = command.text.trim().toLowerCase();
+
+    if (args === "help") {
+      await respond({
+        response_type: "ephemeral",
+        text: [
+          "*📋 PR Status Command Help*",
+          "",
+          "Track PR review times and see which PRs need attention.",
+          "",
+          "• `/pr-status` - Show average review time and pending reviews",
+          "• `/pr-status help` - Show this help message",
+          "",
+          "*How it works:*",
+          "• Messages are tracked when they receive a tracked emoji reaction",
+          "• A message is considered \"reviewed\" when it gets a :white_check_mark:",
+          "• Average time is calculated from first reaction to :white_check_mark:",
+        ].join("\n"),
+      });
+      return;
+    }
+
+    const message = pointsService.formatPRStatusMessage();
+    await respond({
+      response_type: "in_channel",
+      text: message,
+    });
+  });
+}
