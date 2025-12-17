@@ -1,0 +1,41 @@
+display_information:
+  name: PR Points Bot
+  description: Track and reward PR review engagement with points
+  background_color: "#4A154B"
+
+features:
+  bot_user:
+    display_name: PR Points Bot
+    always_online: true
+  slash_commands:
+    - command: /rewards
+      description: View your points and the leaderboard
+      usage_hint: "[leaderboard | stats | help]"
+      should_escape: false
+    - command: /leaderboard
+      description: View the points leaderboard for a time period
+      usage_hint: "[30days | mtd | 6months | year | all]"
+      should_escape: false
+
+oauth_config:
+  scopes:
+    bot:
+      - reactions:read
+      - channels:history
+      - groups:history
+      - im:history
+      - mpim:history
+      - users:read
+      - commands
+      - chat:write
+
+settings:
+  event_subscriptions:
+    bot_events:
+      - reaction_added
+      - reaction_removed
+  interactivity:
+    is_enabled: false
+  org_deploy_enabled: false
+  socket_mode_enabled: true
+  token_rotation_enabled: false
